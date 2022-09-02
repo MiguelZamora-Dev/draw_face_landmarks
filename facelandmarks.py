@@ -4,13 +4,24 @@ import os
 
 images_route = './images'
 results_route = './results/'
+metadata_route = './metadata/'
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_face_mesh = mp.solutions.face_mesh
 
 image_files = []
-if not os.listdir(images_route):
-  print('ERROR: Please enter an image in the images folder')
+if not os.path.exists(images_route) or not os.path.exists(results_route) or not os.path.exists(metadata_route):
+  if not os.path.exists(images_route):
+    os.mkdir('images')
+  if not os.path.exists(results_route):
+    os.mkdir('results')
+  if not os.path.exists(metadata_route):
+    os.mkdir('metadata')
+  print('Folders were created. Please add your images in the images folder and run again.')
+  raise SystemExit
+
+if len(os.listdir(images_route)) == 0:
+  print('Please add some images to the images folder')
   raise SystemExit
 
 for my_file in os.listdir(images_route):
@@ -35,6 +46,8 @@ with mp_face_mesh.FaceMesh(
             relative_y = int(landmark.y * shape[0])
             cv2.circle(annotated_image, (relative_x, relative_y), radius=_radius, color=(202, 125, 249), thickness=-1)
     cv2.imwrite(results_route + image_files[idx][9:-4] + '.png', annotated_image)
+    with open(metadata_route + image_files[-1][9:-4] + '.txt', 'w') as f:
+      f.write(str(results.multi_face_landmarks))
 tempimg = cv2.imread(results_route + image_files[-1][9:-4] + '.png')
 new_width = 1000
 resized_tempimg = cv2.resize(tempimg, (new_width, int(new_width*annotated_image.shape[0]/annotated_image.shape[1])))
